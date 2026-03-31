@@ -1,9 +1,71 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+#define PORT 8080
+#define BUFFER_SIZE 1024
+#define MAX_CLIENTS 10
 
 int main() {
-    // TODO: implementar broker UDP
+    int sockfd;
+    char buffer[BUFFER_SIZE];
 
-    printf("Broker UDP en construcción...\n");
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t addr_len = sizeof(client_addr);
 
+    struct sockaddr_in clients[MAX_CLIENTS];
+    int client_count = 0;
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        perror("Error al crear socket");
+        exit(EXIT_FAILURE);
+    }
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(PORT);
+
+    if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror("Error en bind");
+        exit(EXIT_FAILURE);
+    }
+    printf("Broker UDP escuchando en el puerto %d...\n", PORT);
+
+    while (1) {
+        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
+                         (struct sockaddr *)&client_addr, &addr_len);
+
+        if (n < 0) {
+            perror("Error en recvfrom");
+            continue;
+        }
+
+        buffer[n] = '\0';
+        printf("Mensaje recibido: %s\n", buffer);
+
+        int exists = 0;
+        for (int i = 0; i < client_count; i++) {
+            if (clients[i].sin_addr.s_addr == client_addr.sin_addr.s_addr &&
+                clients[i].sin_port == client_addr.sin_port) {
+                exists = 1;
+                break;
+            }
+        }
+
+        if (!exists && client_count < MAX_CLIENTS) {
+            clients[client_count++] = client_addr;
+            printf("Nuevo cliente UDP registrado\n");
+        }
+
+        for (int i = 0; i < client_count; i++) {
+            sendto(sockfd, buffer, strlen(buffer), 0,
+                   (struct sockaddr *)&clients[i], sizeof(clients[i]));
+        }
+    }
+
+    close(sockfd);
     return 0;
 }
