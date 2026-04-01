@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 #define PORT 8080
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "172.24.36.51"
 
 int main() {
     int sock;
