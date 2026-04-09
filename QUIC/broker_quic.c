@@ -20,19 +20,12 @@ int main() {
     int client_count = 0;
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0) {
-        perror("Error creando socket");
-        exit(EXIT_FAILURE);
-    }
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(PORT);
 
-    if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Error en bind");
-        exit(EXIT_FAILURE);
-    }
+    bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
 
     printf("Broker QUIC escuchando en puerto %d...\n", PORT);
 
@@ -57,7 +50,7 @@ int main() {
 
         if (!exists && client_count < MAX_CLIENTS) {
             clients[client_count++] = client_addr;
-            printf("Nuevo cliente QUIC registrado\n");
+            printf("Nuevo cliente registrado\n");
         }
 
         for (int i = 0; i < client_count; i++) {

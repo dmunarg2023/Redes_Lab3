@@ -31,15 +31,30 @@ int main() {
 
         socklen_t addr_len = sizeof(server_addr);
 
-        int bytes = recvfrom(sock, buffer, BUFFER_SIZE, 0,
-                             (struct sockaddr*)&server_addr, &addr_len);
+        int n = recvfrom(sock, buffer, BUFFER_SIZE, 0,
+                         (struct sockaddr*)&server_addr, &addr_len);
 
-        buffer[bytes] = '\0';
+        buffer[n] = '\0';
 
-        printf("Actualizacion recibida: %s\n", buffer);
+        printf("Mensaje recibido: %s\n", buffer);
+
+        int seq;
+
+        if (sscanf(buffer, "SEQ:%d", &seq) == 1) {
+
+            char ack[50];
+
+            sprintf(ack, "ACK:%d", seq);
+
+            sendto(sock, ack, strlen(ack), 0,
+                   (struct sockaddr*)&server_addr, sizeof(server_addr));
+
+            printf("ACK enviado: %d\n", seq);
+        }
     }
 
     close(sock);
 
     return 0;
 }
+
